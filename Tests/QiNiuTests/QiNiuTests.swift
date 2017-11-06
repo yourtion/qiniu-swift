@@ -30,6 +30,17 @@ class QiNiuTests: XCTestCase {
 
     waitForExpectations(timeout: 15.0, handler: nil)
   }
+
+  func testListBucket() {
+    let expectation = self.expectation(description: "testListBucket")
+
+    QiNiuClient(accessKey: self.apiKey, secretKey: self.apiSecret)
+      .listBucket(bucket: self.bucket, callback: {bucket in
+        expectation.fulfill()
+      });
+
+    waitForExpectations(timeout: 15.0, handler: nil)
+  }
 }
 
 extension QiNiuTests {

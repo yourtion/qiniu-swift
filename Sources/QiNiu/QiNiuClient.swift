@@ -22,7 +22,7 @@ public class QiNiuClient {
   func sign(str: String) -> String {
     do {
       let hex = try HMAC(key: self.secretKey, variant: .sha1).authenticate([UInt8](str.utf8)).toBase64()
-      return hex!
+      return hex!.replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "+", with: "-")
     } catch _ {
       return ""
     }
@@ -44,4 +44,26 @@ public class QiNiuClient {
       callback(domains)
     })
   }
+
+  public func listBucket(bucket: String, callback: @escaping (BucketList?) -> Void) {
+    var request = URLRequest(url: URL(string: "https://rsf.qbox.me/list?bucket=" + bucket)!)
+    let token = self.accessToken(str: "/list?bucket=" + bucket + "\n")
+    request.addValue("QBox " + token, forHTTPHeaderField: "Authorization")
+    request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+    HTTPClient().sendRequest(request: request, callback: { error, data in
+      print(String(data: data!, encoding: .utf8)!)
+      let decoder = JSONDecoder()
+      do {
+        let bucketList = try decoder.decode(BucketList.self, from: data!)
+        callback(bucketList)
+      } catch {
+        print("error trying to convert data to JSON")
+        print(error)
+        callback(nil)
+      }
+      
+    })
+  }
+
 }
